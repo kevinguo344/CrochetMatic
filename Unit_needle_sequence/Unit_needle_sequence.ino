@@ -10,12 +10,12 @@ void setup(){
 //upper limit: top = 150 degrees, bottom = 5 degrees
 //starting: top = 0 degrees, bottom = 180 degrees
 
-
-//topServo.write(150); botServo.write(60); kinda works
-
 void loop(){
+  //close();
   //rest();
   sequence();
+  //pullDown();
+  //topServo.write(0); botServo.write(60);
 }
 
 void sequence(){
@@ -24,7 +24,7 @@ void sequence(){
   pullDown();
   delay(5000);
   close();
-  delay(500);
+  delay(1000);
 }
 
 void rest(){
@@ -39,5 +39,5 @@ void pullDown(){
 
 void close(){
   topServo.write(0);
-  botServo.write(5);
+  botServo.write(0);
 }
