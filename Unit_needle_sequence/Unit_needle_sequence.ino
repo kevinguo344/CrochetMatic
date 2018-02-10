@@ -39,5 +39,19 @@ void pullDown(){
 
 void close(){
   topServo.write(0);
-  botServo.write(0);
+  botServo.write(75);
+}
+
+void spin(){
+  for(int i=0; i<180; i+=1){
+    topServo.write(i);
+    botServo.write(180-i);
+    delay(15);
+  }
+
+  for(int i=180; i>0; i-=1){
+    topServo.write(i);
+    botServo.write(180-i);
+    delay(15);
+  }
 }
