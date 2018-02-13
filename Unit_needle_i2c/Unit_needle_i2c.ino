@@ -15,13 +15,16 @@ void setup() {
   driver.begin();
   driver.setPWMFreq(60);
   yield();
+  rest();
 }
 
 void loop() {
+  //rest();
   sequence();
+  //spin();
 }
 
-long convertToPulse(int a){
+long convertToSeconds(int a){
   return map(a, 0, 180, SERVOMIN, SERVOMAX);
 }
 
@@ -32,28 +35,43 @@ void sequence(){
 }
 
 void rest(){
-  driver.setPWM(topServo, 0, convertToPulse(0));
-  driver.setPWM(botServo, 0, convertToPulse(180));
+  setServoPulse(topServo, convertToSeconds(0));
+  setServoPulse(botServo, convertToSeconds(180));
+}
+
+void spin(){
+  for(int i=0; i<180; i+=1){
+    setServoPulse(topServo, convertToSeconds(i));
+    setServoPulse(botServo, convertToSeconds(180-i));
+    delay(15);
+  }
+
+  for(int i=179; i>=0; i-=1){
+    setServoPulse(topServo, convertToSeconds(i));
+    setServoPulse(botServo, convertToSeconds(180-i));
+    delay(15);
+  }
 }
 
 void pullDown(){
-  driver.setPWM(topServo, 0, convertToPulse(150));
-  driver.setPWM(botServo, 0, convertToPulse(60));
+  setServoPulse(topServo, convertToSeconds(150));
+  setServoPulse(botServo, convertToSeconds(60));
 }
 
 void closeUp(){
-  driver.setPWM(topServo, 0, convertToPulse(0));
-  driver.setPWM(botServo, 0, convertToPulse(75));
-} 
+  setServoPulse(topServo, convertToSeconds(0));
+  setServoPulse(botServo, convertToSeconds(75));
+}
 
-void setServoPulse(uint8_t n, double pulse){
-  double pulseLength;
-  pulseLength = 1000000/60;
-  Serial.print(pulseLength); Serial.println(" us per period");
-  pulseLength /= 4096;
-  Serial.print(pulseLength); Serial.println(" us per bit");
+void setServoPulse(uint8_t n, double pulse) {
+  double pulselength;
+  pulselength = 1000000;   // 1,000,000 us per second
+  pulselength /= 60;   // 60 Hz
+  Serial.print(pulselength); Serial.println(" us per period"); 
+  pulselength /= 4096;  // 12 bits of resolution
+  Serial.print(pulselength); Serial.println(" us per bit"); 
   pulse *= 1000;
-  pulse /= pulseLength;
+  pulse /= pulselength;
   Serial.println(pulse);
   driver.setPWM(n, 0, pulse);
 }
