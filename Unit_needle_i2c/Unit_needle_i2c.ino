@@ -24,14 +24,16 @@ long convertAngle(int a){
 
 void loop() {
   //rest();
+  //pullDown();
+  //closeUp();
   sequence();
   //spin();
 }
 
 void sequence(){
   rest(); delay(500);
-  pullDown(); delay(5000);
-  closeUp(); delay(1000); 
+  pullDown(); delay(500);
+  closeUp(); delay(500); 
 }
 
 void rest(){
@@ -60,5 +62,5 @@ void pullDown(){
 
 void closeUp(){
   driver.setPWM(topServo, 0, convertAngle(0));
-  driver.setPWM(botServo, 0, convertAngle(75));
+  driver.setPWM(botServo, 0, convertAngle(65));
 }
