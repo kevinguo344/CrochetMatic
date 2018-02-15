@@ -24,9 +24,9 @@ long convertAngle(int a){
 
 void loop() {
   //rest();
-  //pullDown();
+  pullDown();
   //closeUp();
-  sequence();
+  //sequence();
   //spin();
 }
 
