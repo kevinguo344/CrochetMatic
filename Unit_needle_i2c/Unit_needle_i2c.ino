@@ -30,7 +30,7 @@ M280 P1 S150
 M280 P2 S312.5
 */
 
-uint8_t servonum = 2;
+//uint8_t servonum = 2;
 const int topServo = 0;
 const int botServo = 1;
 

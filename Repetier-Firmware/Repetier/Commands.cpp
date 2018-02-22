@@ -20,6 +20,10 @@ which based on Tonokip RepRap firmware rewrite based off of Hydra-mmm firmware.
 */
 
 #include "Repetier.h"
+#include <Wire.h>
+#include <Adafruit_PWMServoDriver.h>
+
+Adafruit_PWMServoDriver myservoDriver = Adafruit_PWMServoDriver();
 
 const int8_t sensitive_pins[] PROGMEM = SENSITIVE_PINS; // Sensitive pin list for M42
 int Commands::lowestRAMValue = MAX_RAM;
@@ -1692,6 +1696,20 @@ void Commands::processMCode(GCode *com) {
                     Printer::enableZStepper();
             }
             break;
+        case 100:
+          Commands::needleSequence();
+        case 101:
+          Commands::initializeDriver();
+          break;
+        case 102:
+          Commands::rest();
+          break;
+        case 103:
+          Commands::closeUp();
+          break;
+        case 199:
+          Commands: pullDown();
+          break;
 
         case 104: // M104 temperature
 #if NUM_EXTRUDER > 0
@@ -2461,3 +2479,38 @@ void Commands::writeLowestFreeRAM() {
         Com::printFLN(Com::tFreeRAM, lowestRAMValue);
     }
 }
+
+
+long Commands::convertAngle(int a){
+  return map(a, 0, 180, SERVOMIN, SERVOMAX);
+}
+
+void Commands::initializeDriver(){
+  myservoDriver.begin();
+  myservoDriver.setPWMFreq(60);
+}
+
+void Commands::pullDown(){
+  Com::printF(PSTR("Needles pulling down"));
+  myservoDriver.setPWM(topServo, 0, convertAngle(150));
+  myservoDriver.setPWM(botServo, 0, convertAngle(60));
+}
+
+void Commands::rest(){
+  Com::printF(PSTR("Needles resting"));
+  myservoDriver.setPWM(topServo, 0, convertAngle(0));
+  myservoDriver.setPWM(botServo, 0, convertAngle(180));
+}
+
+void Commands::closeUp(){
+  Com::printF(PSTR("Needles closing"));
+  myservoDriver.setPWM(topServo, 0, convertAngle(0));
+  myservoDriver.setPWM(botServo, 0, convertAngle(65));
+}
+
+void Commands::needleSequence(){
+  Commands::rest(); delay(1000);
+  Commands::pullDown(); delay(1000);
+  Commands::closeUp(); delay(1000);
+}
+

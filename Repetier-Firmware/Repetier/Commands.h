@@ -21,8 +21,13 @@
   Functions in this file are used to communicate using ascii or repetier protocol.
 */
 
+#define SERVOMIN 150
+#define SERVOMAX 600
+
 #ifndef COMMANDS_H_INCLUDED
 #define COMMANDS_H_INCLUDED
+const int topServo = 0;
+const int botServo = 1;
 
 class Commands
 {
@@ -45,6 +50,12 @@ public:
     static void emergencyStop();
     static void checkFreeMemory();
     static void writeLowestFreeRAM();
+    static void needleSequence();
+    static void initializeDriver();
+    static void pullDown();
+    static void closeUp();
+    static void rest();
+    static long convertAngle(int a);
 private:
     static int lowestRAMValue;
     static int lowestRAMValueSend;

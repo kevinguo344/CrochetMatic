@@ -151,12 +151,24 @@ Custom M Codes
 #include "Repetier.h"
 #include <SPI.h>
 
+
 #if UI_DISPLAY_TYPE == DISPLAY_ARDUINO_LIB
 //#include <LiquidCrystal.h> // Uncomment this if you are using liquid crystal library
 #endif
 
+/*
+#define SERVOMIN 150
+#define SERVOMAX 600
+
+const int topServo = 0;
+const int botServo = 1;
+*/
 void setup()
 {
+    //driver.begin();
+    //driver.setPWMFreq(60);
+    //yield();
+    //rest();
     Printer::setup();
 }
 
@@ -164,11 +176,4 @@ void loop()
 {
     Commands::commandLoop();
 }
-
-
-
-
-
-
-
 
