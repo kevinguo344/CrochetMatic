@@ -1488,6 +1488,27 @@ void Commands::processGCode(GCode *com) {
     }
     previousMillisCmd = HAL::timeInMilliseconds();
 }
+
+void Commands::processNCode(GCode *com){
+    switch(com->N){
+        case 0:
+            Commands::initializeDriver();
+            break;
+        case 1:
+            Commands::needleSequence();
+            break;
+        case 2:
+            Commands::rest();
+            break;
+        case 3:
+            Commands::pullDown();
+            break;
+        case 4:
+            Commands::closeUp();
+            break;
+    }
+}
+
 /**
 \brief Execute the G command stored in com.
 */
@@ -2407,6 +2428,7 @@ void Commands::executeGCode(GCode *com) {
     }
     if(com->hasG()) processGCode(com);
     else if(com->hasM()) processMCode(com);
+    else if(com->hasN()) processNCode(com);
     else if(com->hasT()) {    // Process T code
         //com->printCommand(); // for testing if this the source of extruder switches
         Commands::waitUntilEndOfAllMoves();
@@ -2426,6 +2448,8 @@ void Commands::executeGCode(GCode *com) {
 #endif
 
 }
+
+
 
 void Commands::emergencyStop() {
 #if defined(KILL_METHOD) && KILL_METHOD == 1
