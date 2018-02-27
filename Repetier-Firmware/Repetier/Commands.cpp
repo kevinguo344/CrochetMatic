@@ -2536,5 +2536,6 @@ void Commands::needleSequence(){
   Commands::rest(); delay(1000);
   Commands::pullDown(); delay(1000);
   Commands::closeUp(); delay(1000);
+  Commands::rest();
 }
 
