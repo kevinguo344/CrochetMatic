@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+</head>
+<body>
+	<script type="text/javascript">
+		//equation of ellipse 
+		// major axis r
+		//var centerX = 175.5;
+		//var centerY = 422.5;
+		var centerX = 262;
+		var centerY = 239;
+		var radius = 50;
+
+		//for elliptical path
+		var xRad = 20;
+		var yRad = 50;
+
+		//original
+		var rotationPtX = centerX - radius;
+
+		//new DIDN'T WORK
+		//var rotationPtX = centerX - xRad;
+
+		//new
+		//var rotationPtX = centerX - yRad;
+		function createCircularPath(x,y,r) {
+			var points = [];
+			for (var theta = 0; theta <= 360; theta += 10){
+				var cos = (r * Math.cos(theta * (Math.PI / 180))) + x;
+				var sin = (r * Math.sin(theta * (Math.PI / 180))) + y;
+				points.push({
+					x: cos,
+					y: sin,
+				});
+			}
+			return points;
+		}
+
+		function createEllipticalPath(x,y,xRadius,yRadius, times){
+			var points = [];
+			for(var i = 0; i < times; i++){
+				for (var theta = 360; theta >= 90; theta -= 10){
+					var cos = Math.round(1000*((xRadius * Math.cos(theta * (Math.PI / 180))) + x))/1000;
+					var sin = Math.round(1000*((yRadius * Math.sin(theta * (Math.PI / 180))) + y))/1000;
+					points.push({
+						x: cos,
+						y: sin,
+						m: null
+					});
+				}
+				points.push({x: null, y: null, m: 100});
+				//points.push({x: 252, y: 219});
+				//points.push("G1 X252 Y219 Z0 F1000\n");
+			}
+			return points;
+		}
+
+		function createGcode(pointsArray){
+			var gcode = "G90\n";
+			//var gcode = "";
+			pointsArray.forEach(function(point){
+				if(point.m == null){
+					var line = "G1 X" + point.x + " Y" + point.y + " Z0 F1000\r\n";
+					gcode += line;
+				}
+				else{
+					var line = "G4 P2000\nM" + point.m + "\r\n";
+					gcode += line;
+				}
+			});
+			return gcode;
+		}
+		console.log(createGcode(createEllipticalPath(rotationPtX, centerY, xRad, yRad, 1)));
+	</script>
+</body>
+</html>
