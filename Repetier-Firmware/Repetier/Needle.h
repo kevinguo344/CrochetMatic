@@ -1,22 +1,22 @@
 #include "Repetier.h"
 #include <Wire.h>
-#include <Adafruit_PWMServoDriver.h>
+#include "Motor.h"
 
 #define SERVOMIN 150
 #define SERVOMAX 600
 
 class Needle{
 	public:
-    Needle();
-		//Needle(Motor& t, Motor& b);
-		void initializeDriver();
+		Needle(Motor& t, Motor& b);
+    //Needle(int i);
+		void initializeDrivers();
 		void rest();
 		void closeUp();
 		void pullDown();
 		void sequence();
 	private:
-		//Motor topMotor;
-		//Motor bottomMotor;
+		Motor *topMotor;
+		Motor *bottomMotor;
 };
 
 

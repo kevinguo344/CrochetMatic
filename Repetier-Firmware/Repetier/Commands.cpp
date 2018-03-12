@@ -1488,9 +1488,8 @@ void Commands::processGCode(GCode *com) {
     }
     previousMillisCmd = HAL::timeInMilliseconds();
 }
-
-void Commands::processNCode(GCode *com){
-    switch(com->N){
+void Commands::processLCode(GCode *com){
+    switch( com->L ){
         case 0:
             Commands::initializeDriver();
             break;
@@ -2428,7 +2427,7 @@ void Commands::executeGCode(GCode *com) {
     }
     if(com->hasG()) processGCode(com);
     else if(com->hasM()) processMCode(com);
-    else if(com->hasN()) processNCode(com);
+    else if(com->hasL()) processLCode(com);
     else if(com->hasT()) {    // Process T code
         //com->printCommand(); // for testing if this the source of extruder switches
         Commands::waitUntilEndOfAllMoves();

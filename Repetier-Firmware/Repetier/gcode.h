@@ -29,6 +29,7 @@ public:
     uint16_t N; // Line number
     uint16_t M;
     uint16_t G;
+    uint16_t L;
     float X;
     float Y;
     float Z;
@@ -45,7 +46,6 @@ public:
     float A;
     float B;
     float K;
-    float L;
     float O;
 
     char *text; //text[17];

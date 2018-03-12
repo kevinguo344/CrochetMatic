@@ -37,7 +37,7 @@ public:
     static void processArc(GCode *com);
     static void processGCode(GCode *com);
     static void processMCode(GCode *com);
-    static void processNCode(GCode *com);
+    static void processLCode(GCode *com);
     static void executeGCode(GCode *com);
     static void waitUntilEndOfAllMoves();
     static void waitUntilEndOfAllBuffers();

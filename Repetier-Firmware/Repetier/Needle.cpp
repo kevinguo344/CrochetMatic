@@ -2,18 +2,14 @@
 using namespace std;
 
 //NEEDLE FUNCTIONS
-
-Needle::Needle(){
-  
-}
-/*
 Needle::Needle(Motor& t, Motor& b){
-  topMotor = t;
-  bottomMotor = b;
-}*/
+  *topMotor = t;
+  *bottomMotor = b;
+}
 
-void Needle::initializeDriver(){
-  
+void Needle::initializeDrivers(){
+  topMotor.initializeDriver();
+  //*bottomMotor.initializeDriver();
 }
 
 void Needle::rest(){
