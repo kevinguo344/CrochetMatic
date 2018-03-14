@@ -39,8 +39,6 @@ void setup() {
   driver.begin();
   driver.setPWMFreq(60);
   yield();
-  rest();
-  Serial.println("M260 A64");
 }
 
 long convertAngle(int a){
@@ -49,11 +47,29 @@ long convertAngle(int a){
 }
 
 void loop() {
-  //rest();
-  pullDown();
-  //closeUp();
-  //sequence();
-  //spin();
+  driver.setPWM(topServo, 0, convertAngle(0));
+  //if bottom angle is at (180-65) = 115, top can only go to 90
+  //
+  driver.setPWM(botServo, 0, convertAngle(65));
+  Serial.println("In loop");
+
+  //when bottom angle is at 180, top angle will be at 60 to close completely and 155 to open completely
+  //
+
+  //absolute ceiling of angles:
+  //    top:    155 degrees
+  //    bottom: 180 degrees
+
+  //absolute floor of angles:
+  //    top:    0 degrees
+  //    bottom: 0 degrees
+
+  //relative ceiling of angles:
+  //    top: +115 degrees of bottom
+
+  //relative floor of angles:
+  //    top: +0 degrees of bottom
+
 }
 
 void sequence(){
@@ -96,3 +112,9 @@ void closeUp(){
   driver.setPWM(botServo, 0, convertAngle(65));
   Serial.println("M280 P2 S312.5");
 }
+
+void extendAllUp(){
+  driver.setPWM(topServo, 0, convertAngle(120));
+  driver.setPWM(botServo, 0, convertAngle(0));
+}
+
