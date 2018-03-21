@@ -1517,13 +1517,13 @@ void Commands::processLCode(GCode *com){
                 float topAngle = com->T;
                 float botAngle = com->B;
                 Com::printF(PSTR("It has T "));
-                Com::printF(PSTR("%04d"),topAngle);
+                Com::printF("%04f",topAngle);
                 Com::printF(PSTR("\n"));
                 
                 Com::printF(PSTR("It has B "));
-                Com::printF(PSTR("%04d"),botAngle);
+                Com::printF("%04f",botAngle);
                 Com::printF(PSTR("\n"));
-                //Commands::setAngles(com->T,com->B);
+                Commands::setAngles(topAngle,botAngle);
               }
               else{
                 
@@ -2580,8 +2580,8 @@ void Commands::extendUpClosed(){
 }
 
 void Commands::setAngles(float t, float b){
-  Com::printF(PSTR("It executed setAngles"));
-  if(abs(t - b) >= 155 && (t >= 0 && t <= 180) && (b >= 0 && b <= 180)){
+  if(abs(t - b) <= 155 && (t >= 0 && t <= 180) && (b >= 0 && b <= 180)){
+    Com::printF(PSTR("It executed setAngles"));
     myservoDriver.setPWM(topServo, 0, convertAngle(t));
     myservoDriver.setPWM(botServo, 0, convertAngle(180-b));
   }
