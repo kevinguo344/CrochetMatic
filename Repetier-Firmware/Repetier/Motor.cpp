@@ -10,7 +10,7 @@ Motor::Motor(uint8_t addr, int i, bool inv){
 Motor::Motor(){}
 
 void Motor::initializeDriver(){
-  *driver = new Adafruit_PWMServoDriver(driverAddress);
+  //*driver = new Adafruit_PWMServoDriver(driverAddress);
 }
 
 //SETTERS

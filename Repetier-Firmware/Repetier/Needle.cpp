@@ -8,7 +8,7 @@ Needle::Needle(Motor& t, Motor& b){
 }
 
 void Needle::initializeDrivers(){
-  topMotor.initializeDriver();
+  //topMotor.initializeDriver();
   //*bottomMotor.initializeDriver();
 }
 

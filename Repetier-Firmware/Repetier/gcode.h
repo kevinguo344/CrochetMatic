@@ -44,7 +44,7 @@ public:
     float C;
     float H;
     float A;
-    float B;
+    uint8_t B;
     float K;
     float O;
 

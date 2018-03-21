@@ -57,6 +57,9 @@ public:
     static void closeUp();
     static void rest();
     static long convertAngle(int a);
+    static void extendUpOpened();
+    static void extendUpClosed();
+    static void setAngles(float t, float b);
 private:
     static int lowestRAMValue;
     static int lowestRAMValueSend;

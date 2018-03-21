@@ -14,8 +14,11 @@
 		var radius = 50;
 
 		//for elliptical path
-		var xRad = 20;
-		var yRad = 50;
+		var xRad = 30;
+		var yRad = 100;
+
+		//var brushPointStart = {G1 X382 Y329}
+		//var brushPointEnd = {G1 X250 Y329}
 
 		//original
 		var rotationPtX = centerX - radius;
@@ -41,9 +44,28 @@
 		function createEllipticalPath(x,y,xRadius,yRadius, times){
 			var points = [];
 			for(var i = 0; i < times; i++){
-				for (var theta = 360; theta >= 90; theta -= 10){
+				//for (var theta = 450; theta > 180; theta -= 10){
+				for (var theta = 450; theta > 360; theta -= 10){
+					var cos = Math.round(1000*((xRadius * Math.cos(theta * (Math.PI / 180))) + x))/1000;
+					var sin = Math.round(1000*((yRadius/2 * Math.sin(theta * (Math.PI / 180))) + y))/1000;
+					points.push({
+						x: cos,
+						y: sin,
+						m: null
+					});
+				}
+				for (var theta = 360; theta > 180; theta -= 10){
 					var cos = Math.round(1000*((xRadius * Math.cos(theta * (Math.PI / 180))) + x))/1000;
 					var sin = Math.round(1000*((yRadius * Math.sin(theta * (Math.PI / 180))) + y))/1000;
+					points.push({
+						x: cos,
+						y: sin,
+						m: null
+					});
+				}
+				for (var theta = 180; theta >= 90; theta -= 10){
+					var cos = Math.round(1000*((xRadius * Math.cos(theta * (Math.PI / 180))) + x))/1000;
+					var sin = Math.round(1000*((yRadius/2 * Math.sin(theta * (Math.PI / 180))) + y))/1000;
 					points.push({
 						x: cos,
 						y: sin,
@@ -66,10 +88,11 @@
 					gcode += line;
 				}
 				else{
-					var line = "G4 P2000\nM" + point.m + "\r\n";
-					gcode += line;
+					//var line = "G4 P2000\nM" + point.m + "\r\n";
+					//gcode += line;
 				}
 			});
+			gcode
 			return gcode;
 		}
 		console.log(createGcode(createEllipticalPath(rotationPtX, centerY, xRad, yRad, 1)));

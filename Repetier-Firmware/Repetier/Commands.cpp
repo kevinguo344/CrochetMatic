@@ -1505,6 +1505,29 @@ void Commands::processLCode(GCode *com){
         case 4:
             Commands::closeUp();
             break;
+        case 5:
+            Commands::extendUpOpened();
+            break;
+        case 6:
+            Commands::extendUpClosed();
+            break;
+        case 7:
+            if(com->hasT()){
+              Com::printF(PSTR("It has T "));
+              Com::printF(PSTR("%04d"),com->T);
+              Com::printF(PSTR("\n"));
+              if(com->hasB()){
+                Com::printF(PSTR("It has B "));
+                Com::printF(PSTR("%04d"),com->B);
+                Com::printF(PSTR("\n"));
+                Commands::setAngles(com->T,com->B);
+              }
+            }
+            break;
+        case 8: 
+            //myservoDriver.setPWM(topServo, 0, convertAngle(0));
+            //myservoDriver.setPWM(botServo, 0, convertAngle(65));
+            break;
     }
 }
 
@@ -2536,5 +2559,25 @@ void Commands::needleSequence(){
   Commands::pullDown(); delay(1000);
   Commands::closeUp(); delay(1000);
   Commands::rest();
+}
+
+void Commands::extendUpOpened(){
+  Com::printF(PSTR("Needles extended up closed"));
+  myservoDriver.setPWM(topServo, 0, convertAngle(180));
+  myservoDriver.setPWM(botServo, 0, convertAngle(0));
+}
+
+void Commands::extendUpClosed(){
+  Com::printF(PSTR("Needles resting"));
+  myservoDriver.setPWM(topServo, 0, convertAngle(60));
+  myservoDriver.setPWM(botServo, 0, convertAngle(0));
+}
+
+void Commands::setAngles(float t, float b){
+  Com::printF(PSTR("It executed setAngles"));
+  if(abs(t - b) >= 155 && (t >= 0 && t <= 180) && (b >= 0 && b <= 180)){
+    myservoDriver.setPWM(topServo, 0, convertAngle(t));
+    myservoDriver.setPWM(botServo, 0, convertAngle(180-b));
+  }
 }
 
