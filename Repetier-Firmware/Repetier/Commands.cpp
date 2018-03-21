@@ -1512,21 +1512,27 @@ void Commands::processLCode(GCode *com){
             Commands::extendUpClosed();
             break;
         case 7:
-            if(com->hasT()){
-              Com::printF(PSTR("It has T "));
-              Com::printF(PSTR("%04d"),com->T);
-              Com::printF(PSTR("\n"));
-              if(com->hasB()){
-                Com::printF(PSTR("It has B "));
-                Com::printF(PSTR("%04d"),com->B);
+            if(com->hasB() && com->hasT()){
+              if(com->hasB() && com->hasT()){
+                float topAngle = com->T;
+                float botAngle = com->B;
+                Com::printF(PSTR("It has T "));
+                Com::printF(PSTR("%04d"),topAngle);
                 Com::printF(PSTR("\n"));
-                Commands::setAngles(com->T,com->B);
+                
+                Com::printF(PSTR("It has B "));
+                Com::printF(PSTR("%04d"),botAngle);
+                Com::printF(PSTR("\n"));
+                //Commands::setAngles(com->T,com->B);
+              }
+              else{
+                
               }
             }
             break;
         case 8: 
-            //myservoDriver.setPWM(topServo, 0, convertAngle(0));
-            //myservoDriver.setPWM(botServo, 0, convertAngle(65));
+            myservoDriver.setPWM(topServo, 0, convertAngle(0));
+            myservoDriver.setPWM(botServo, 0, convertAngle(65));
             break;
     }
 }

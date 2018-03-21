@@ -50,7 +50,7 @@ void loop() {
   driver.setPWM(topServo, 0, convertAngle(0));
   //if bottom angle is at (180-65) = 115, top can only go to 90
   //
-  driver.setPWM(botServo, 0, convertAngle(65));
+  driver.setPWM(botServo, 0, convertAngle(180));
   Serial.println("In loop");
 
   //when bottom angle is at 180, top angle will be at 60 to close completely and 155 to open completely
