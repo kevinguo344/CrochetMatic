@@ -1491,7 +1491,10 @@ void Commands::processGCode(GCode *com) {
 void Commands::processLCode(GCode *com){
     switch( com->L ){
         case 0:
-            Commands::initializeDriver();
+            Wire.beginTransmission(42);
+            Wire.write("N 0 0");
+            Wire.endTransmission();
+            //Commands::initializeDriver();
             break;
         case 1:
             Commands::needleSequence();
@@ -1512,27 +1515,40 @@ void Commands::processLCode(GCode *com){
             Commands::extendUpClosed();
             break;
         case 7:
-            if(com->hasB() && com->hasT()){
-              if(com->hasB() && com->hasT()){
-                float topAngle = com->T;
+            Commands::descendDown();
+            break;
+        case 8:
+            Commands::ascendUp();
+            break;
+        case 9:
+          if(com->hasT()){
+              float topAngle = com->T;
+              Com::printF(PSTR("It has T "));
+              Com::printF("%04f",topAngle);
+              Com::printF(PSTR("\n"));
+              if(com->hasB()){
                 float botAngle = com->B;
-                Com::printF(PSTR("It has T "));
-                Com::printF("%04f",topAngle);
-                Com::printF(PSTR("\n"));
-                
                 Com::printF(PSTR("It has B "));
                 Com::printF("%04f",botAngle);
                 Com::printF(PSTR("\n"));
                 Commands::setAngles(topAngle,botAngle);
               }
-              else{
-                
-              }
             }
             break;
-        case 8: 
-            myservoDriver.setPWM(topServo, 0, convertAngle(0));
-            myservoDriver.setPWM(botServo, 0, convertAngle(65));
+        case 10:
+          if(com->hasT()){
+              float topAngle = com->T;
+              Com::printF(PSTR("It has T "));
+              Com::printF("%04f",topAngle);
+              Com::printF(PSTR("\n"));
+              if(com->hasB()){
+                float botAngle = com->B;
+                Com::printF(PSTR("It has B "));
+                Com::printF("%04f",botAngle);
+                Com::printF(PSTR("\n"));
+                Commands::setAnglesRelative(topAngle,botAngle);
+              }
+            }
             break;
     }
 }
@@ -2532,14 +2548,11 @@ void Commands::writeLowestFreeRAM() {
     }
 }
 
-
-long Commands::convertAngle(int a){
-  return map(a, 0, 180, SERVOMIN, SERVOMAX);
-}
-
+//needle commands
 void Commands::initializeDriver(){
-  myservoDriver.begin();
-  myservoDriver.setPWMFreq(60);
+  Wire.write("N 0 0");
+  //myservoDriver.begin();
+  //myservoDriver.setPWMFreq(60);
 }
 
 void Commands::pullDown(){
@@ -2568,13 +2581,13 @@ void Commands::needleSequence(){
 }
 
 void Commands::extendUpOpened(){
-  Com::printF(PSTR("Needles extended up closed"));
+  Com::printF(PSTR("Needles extended up opened"));
   myservoDriver.setPWM(topServo, 0, convertAngle(180));
   myservoDriver.setPWM(botServo, 0, convertAngle(0));
 }
 
 void Commands::extendUpClosed(){
-  Com::printF(PSTR("Needles resting"));
+  Com::printF(PSTR("Needles closed"));
   myservoDriver.setPWM(topServo, 0, convertAngle(60));
   myservoDriver.setPWM(botServo, 0, convertAngle(0));
 }
@@ -2584,6 +2597,53 @@ void Commands::setAngles(float t, float b){
     Com::printF(PSTR("It executed setAngles"));
     myservoDriver.setPWM(topServo, 0, convertAngle(t));
     myservoDriver.setPWM(botServo, 0, convertAngle(180-b));
+  }
+}
+
+void Commands::setAnglesRelative(float t, float b){
+  t = constrain(t, 0.0, 180.0);
+  b = constrain(b, 0.0, 1.0);
+  float bAngle = map(b, 0.0, 1.0, 0, 120);
+  bAngle += t;
+  bAngle = constrain(bAngle, 0, 180.0);
+  myservoDriver.setPWM(topServo, 0, convertAngle(t));
+  myservoDriver.setPWM(botServo, 0, convertAngle(180-bAngle));
+}
+
+void Commands::descendDown(){
+  //top: 60 -> 0
+  //bottom: 180 -> 0
+  for(int i = 60; i >= 0; i--){
+    myservoDriver.setPWM(topServo, 0, convertAngle(i));
+    myservoDriver.setPWM(botServo, 0, convertAngle(180-(3*i)));
+    delay(10);
+  }
+}
+
+void Commands::ascendUp(){
+  //top: 0 -> 180
+  //bottom: 0 -> 180
+  for(int i = 0; i <= 180; i++){
+    myservoDriver.setPWM(topServo, 0, convertAngle(i));
+    myservoDriver.setPWM(botServo, 0, convertAngle(180-i));
+    delay(10);
+  }
+}
+
+//numeric commands
+long Commands::convertAngle(int a){
+  return map(a, 0, 180, SERVOMIN, SERVOMAX);
+}
+
+float Commands::contsrain(float x, float a, float b){
+  if(x >= a && x <= b){
+    return x;
+  }
+  else if(x < a){
+    return a;
+  }
+  else{
+    return b;
   }
 }
 

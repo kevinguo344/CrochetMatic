@@ -56,10 +56,14 @@ public:
     static void pullDown();
     static void closeUp();
     static void rest();
+    static void descendDown();
+    static void ascendUp();
     static long convertAngle(int a);
+    static float contsrain(float x, float a, float b);
     static void extendUpOpened();
     static void extendUpClosed();
     static void setAngles(float t, float b);
+    static void setAnglesRelative(float t, float b);
 private:
     static int lowestRAMValue;
     static int lowestRAMValueSend;

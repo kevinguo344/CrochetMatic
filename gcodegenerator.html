@@ -9,16 +9,23 @@
 		// major axis r
 		//var centerX = 175.5;
 		//var centerY = 422.5;
-		var centerX = 262;
+		//var centerX = 262;
+		var centerX = 212;
 		var centerY = 239;
 		var radius = 50;
 
 		//for elliptical path
 		var xRad = 30;
-		var yRad = 100;
+		//var yRad = 100;
+		var yRad = 50;
 
-		//var brushPointStart = {G1 X382 Y329}
-		//var brushPointEnd = {G1 X250 Y329}
+
+		//BRUSH POINT
+		//G1 X342 Y279
+
+
+		//G1 X212 Y274
+		//G1 X152 Y274
 
 		//original
 		var rotationPtX = centerX - radius;
@@ -30,7 +37,7 @@
 		//var rotationPtX = centerX - yRad;
 		function createCircularPath(x,y,r) {
 			var points = [];
-			for (var theta = 0; theta <= 360; theta += 10){
+			for (var theta = 360; theta >= 0; theta -= 10){
 				var cos = (r * Math.cos(theta * (Math.PI / 180))) + x;
 				var sin = (r * Math.sin(theta * (Math.PI / 180))) + y;
 				points.push({
@@ -38,6 +45,24 @@
 					y: sin,
 				});
 			}
+			return points;
+		}
+
+		function createCircularPath2(x,y,r) {
+			var points = [];
+			for (var theta = 360; theta >= 90; theta -= 10){
+				var cos = (r * Math.cos(theta * (Math.PI / 180))) + x;
+				var sin = (r * Math.sin(theta * (Math.PI / 180))) + y;
+				points.push({
+					x: cos,
+					y: sin,
+				});
+			}
+			points.push({L:1});
+			points.push({L:6});
+			//points.push({x:212, y:274});
+			//points.push({L:7});
+			//points.push({x:152, y:274});
 			return points;
 		}
 
@@ -79,23 +104,83 @@
 			return points;
 		}
 
+		function createEllipticalPath2(x,y,xRadius,yRadius){
+			var points = [];
+				//for (var theta = 450; theta > 180; theta -= 10){
+				for (var theta = 450; theta > 360; theta -= 10){
+					//var cos = Math.round(1000*((xRadius * Math.cos(theta * (Math.PI / 180))) + x))/1000;
+					var cos = Math.round(1000*((xRadius * Math.cos(theta * (Math.PI / 180))) + x))/1000;
+					var sin = Math.round(1000*((yRadius/2 * Math.sin(theta * (Math.PI / 180))) + y))/1000;
+					points.push({
+						x: cos,
+						y: sin,
+						m: null
+					});
+				}
+				for (var theta = 360; theta > 180; theta -= 10){
+					var cos = Math.round(1000*((xRadius * Math.cos(theta * (Math.PI / 180))) + x))/1000;
+					var sin = Math.round(1000*((yRadius * Math.sin(theta * (Math.PI / 180))) + y))/1000;
+					points.push({
+						x: cos,
+						y: sin,
+						m: null
+					});
+				}
+				for (var theta = 180; theta >= 90; theta -= 10){
+					var cos = Math.round(1000*((xRadius * Math.cos(theta * (Math.PI / 180))) + x))/1000;
+					var sin = Math.round(1000*((yRadius/2 * Math.sin(theta * (Math.PI / 180))) + y))/1000;
+					points.push({
+						x: cos,
+						y: sin,
+						m: null
+					});
+				}
+				points.push({x:262, y:239});
+				points.push({x: null, y: null, m: 100});
+
+				//points.push({x: 252, y: 219});
+				//points.push("G1 X252 Y219 Z0 F1000\n");
+			return points;
+		}
+
+
 		function createGcode(pointsArray){
 			var gcode = "G90\n";
 			//var gcode = "";
 			pointsArray.forEach(function(point){
-				if(point.m == null){
+				if(point.L == null){
 					var line = "G1 X" + point.x + " Y" + point.y + " Z0 F1000\r\n";
 					gcode += line;
 				}
 				else{
-					//var line = "G4 P2000\nM" + point.m + "\r\n";
-					//gcode += line;
+					var line = "G4 P2000\nL" + point.L + "\r\n";
+					gcode += line;
 				}
 			});
 			gcode
 			return gcode;
 		}
-		console.log(createGcode(createEllipticalPath(rotationPtX, centerY, xRad, yRad, 1)));
+
+		function interpolateMove(startCoord, endCoord, startNeedle, endNeedle){
+			var line = "";
+			var topNeedleStep = (endNeedle.T-startNeedle.T)/10;
+			var botNeedleStep = (endNeedle.B-startNeedle.B)/10;
+			var xStep = (endCoord.x-startCoord.x)/10;
+			var yStep = (endCoord.y-startCoord.y)/10;
+			for(var i = 0; i <= 10; i++){
+				line += "G1 X" + (startCoord.x+i*xStep) + " Y" + (startCoord.y+i*yStep) + " Z0 F1000\r\n"
+				line += "M400 \n";
+				line += "L9 T" + (startNeedle.T + i*topNeedleStep) + " B" + (startNeedle.B + i*botNeedleStep) + "\n";
+				line += "G4 P50\n";
+			}
+			return line;
+		}
+		var s = {x: 182, y: 284};
+		var e = {x: 152, y: 284};
+		var l1 = {T: 60, B: 180};
+		var l2 = {T: 0, B: 0};
+		console.log(interpolateMove(s,e,l1,l2));
+		//console.log(createGcode(createEllipticalPath2(centerX, centerY, xRad, yRad, 1)));
 	</script>
 </body>
 </html>
