@@ -36,7 +36,6 @@ void FTM1_encoder_setup()
   // configure the input pins
   PORTA_PCR12 = PORT_PCR_MUX(7);  // Teensy pin 3 Phase A is count
   PORTA_PCR13 = PORT_PCR_MUX(7);  // Teensy pin 4 Phase B is direction
-  Serial.println(FTM_QDCTRL_QUADMODE_MASK,BIN);
   Serial.println(FTM1_QDCTRL,BIN);
 }
 
@@ -55,7 +54,7 @@ void FTM2_encoder_setup()
   // Set max value
   FTM2_MOD = FTM2_MOD_VALUE; //0x4E1F;
   // set the FTM for quadrature mode, default options
-  FTM2_QDCTRL |= FTM_QDCTRL_QUADMODE_MASK | FTM_QDCTRL_QUADEN_MASK | FTM_PHAFLTREN | FTM_PHBFLTREN;
+  FTM2_QDCTRL |= FTM_QDCTRL_QUADEN_MASK | FTM_PHAFLTREN | FTM_PHBFLTREN | FTM_QDCTRL_QUADMODE_MASK;
   // start the FTM by selecting external clock
   FTM2_SC |= FTM_SC_CLKS_3; // 0x05 -> divide by 32
   FTM2_SC = (FTM2_SC & ~FTM_SC_PS_MASK) | FTM_SC_PS(0);
@@ -64,6 +63,7 @@ void FTM2_encoder_setup()
   // configure the input pins
   PORTB_PCR18 = PORT_PCR_MUX(6);  // Teensy pin 29 Phase A is count
   PORTB_PCR19 = PORT_PCR_MUX(6);  // Teensy pin 30 Phase B is direction
+  Serial.println(FTM2_QDCTRL,BIN);
 }
 
 
