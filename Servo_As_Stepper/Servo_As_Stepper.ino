@@ -9,8 +9,11 @@
 #include <Wire.h>
 #include <Servo.h>
 const int I2C_SLAVE = 42;
-const int MAXIMUM_STEPS = 200;
+const int MAXIMUM_STEPS = 180;
 int current_needle;
+
+int32_t current_stepper_pos;
+int32_t current_latch_pos;
 
 class Needle {
   public:
@@ -32,6 +35,8 @@ class Needle {
 void Needle::update_needle_servo_value()
 {
   needle_steps = needle_stepper_position();
+  //Serial.print("Needle steps: ");
+  //Serial.println(needle_steps);
   // To be replaced by I2C commands
   needle_servo.write((180.0*needle_steps)/MAXIMUM_STEPS);
 }
@@ -39,6 +44,8 @@ void Needle::update_needle_servo_value()
 void Needle::update_latch_servo_value()
 {
   latch_steps = latch_stepper_position();
+  //Serial.print("Latch steps: ");
+  //Serial.println(latch_steps);
   // To be replaced by I2C commands
   // Wire.beginTransmission(... // address of the target board
   // Wire.write(...
@@ -104,9 +111,6 @@ void on_I2C_event(int how_many)
       command[k] = Wire.read();
     }
     command[4] = 0;
-    Serial.print("Command:");
-    Serial.println(command);
-    
     Serial.print("Recieved: ");
     Serial.print(command);
     Serial.print(" ");
@@ -150,9 +154,13 @@ void loop()
     Serial.print(current_needle);
   }
   needles[current_needle].update_servos();
-  //Serial.print(needle_stepper_position());
-  //Serial.print("/");
-  //Serial.println(latch_stepper_position());
+  if(current_stepper_pos != needle_stepper_position() || current_latch_pos != latch_stepper_position()){
+    Serial.print(needle_stepper_position());
+    Serial.print("/");
+    Serial.println(latch_stepper_position());
+    current_stepper_pos = needle_stepper_position();
+    current_latch_pos = latch_stepper_position();
+  }
 }
 
 

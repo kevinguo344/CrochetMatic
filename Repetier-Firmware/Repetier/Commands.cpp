@@ -2550,9 +2550,9 @@ void Commands::writeLowestFreeRAM() {
 
 //needle commands
 void Commands::initializeDriver(){
-  Wire.write("N 0 0");
-  //myservoDriver.begin();
-  //myservoDriver.setPWMFreq(60);
+  //Wire.write("N 0 0");
+  myservoDriver.begin();
+  myservoDriver.setPWMFreq(60);
 }
 
 void Commands::pullDown(){

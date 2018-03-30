@@ -36,7 +36,7 @@
 
 */
 
-#define NUM_EXTRUDER 0
+#define NUM_EXTRUDER 1
 #define MOTHERBOARD 33
 #include "pins.h"
 
@@ -65,7 +65,7 @@
 #define DRIVE_SYSTEM 1
 #define XAXIS_STEPS_PER_MM 128
 #define YAXIS_STEPS_PER_MM 128
-#define ZAXIS_STEPS_PER_MM 80
+#define ZAXIS_STEPS_PER_MM 1
 #define EXTRUDER_FAN_COOL_TEMP 50
 #define PDM_FOR_EXTRUDER 0
 #define PDM_FOR_COOLER 0
@@ -239,10 +239,10 @@ It also can add a delay to wait for spindle to run on full speed.
 #define INVERT_Z_DIR 0
 #define X_HOME_DIR 1
 #define Y_HOME_DIR 1
-#define Z_HOME_DIR -1
+#define Z_HOME_DIR 1
 #define X_MAX_LENGTH 524
 #define Y_MAX_LENGTH 478
-#define Z_MAX_LENGTH 10
+#define Z_MAX_LENGTH 180
 #define X_MIN_POS 0
 #define Y_MIN_POS 0
 #define Z_MIN_POS 0
