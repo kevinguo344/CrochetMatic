@@ -9,7 +9,11 @@
 #include <Wire.h>
 #include <Servo.h>
 const int I2C_SLAVE = 42;
-const int MAXIMUM_STEPS = 180;
+const int STEP_PER_MM = 128;
+const int MAX_RANGE_MM = 65;
+const int MAXIMUM_STEPS = MAX_RANGE_MM * STEP_PER_MM;
+const int MIN_NEEDLE_LATCH_DELTA_STEP = -10 * STEP_PER_MM;
+const int MAX_NEEDLE_LATCH_DELTA_STEP = 28*STEP_PER_MM;
 int current_needle;
 
 int32_t current_stepper_pos;
@@ -23,7 +27,8 @@ class Needle {
   void update_needle_servo_value();
   void update_latch_servo_value();
   void update_servos();
-
+  void safe_update_servos();
+  
   void set_as_active();
 
   // To be replaced by I2C data to reach a servo;
@@ -52,13 +57,31 @@ void Needle::update_latch_servo_value()
   // Wire.write(...
   // Wire.endTransmission();    // Transmit the information...
 
-  latch_servo.write((180.0*latch_steps)/MAXIMUM_STEPS);
+  latch_servo.write(180 - (180.0*latch_steps)/MAXIMUM_STEPS);
 }
 
 void Needle::update_servos()
 {
   update_needle_servo_value();
   update_latch_servo_value();
+}
+
+void Needle::safe_update_servos()
+{
+  latch_steps = latch_stepper_position();
+  needle_steps = needle_stepper_position();
+  int max_safe_latch_steps = needle_steps + MAX_NEEDLE_LATCH_DELTA_STEP;
+  int min_safe_latch_steps = needle_steps + MIN_NEEDLE_LATCH_DELTA_STEP;
+  if (latch_steps > max_safe_latch_steps){
+    latch_steps = max_safe_latch_steps;
+  }
+  else{
+    if (latch_steps < min_safe_latch_steps){
+      latch_steps = min_safe_latch_steps;
+    }
+  }
+  needle_servo.write(((180.0*needle_steps)/MAXIMUM_STEPS));
+  latch_servo.write(180 - (180.0*latch_steps)/MAXIMUM_STEPS);
 }
 
 void Needle::set_as_active()
