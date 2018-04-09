@@ -65,7 +65,7 @@
 #define DRIVE_SYSTEM 1
 #define XAXIS_STEPS_PER_MM 128
 #define YAXIS_STEPS_PER_MM 128
-#define ZAXIS_STEPS_PER_MM 1
+#define ZAXIS_STEPS_PER_MM 128
 #define EXTRUDER_FAN_COOL_TEMP 50
 #define PDM_FOR_EXTRUDER 0
 #define PDM_FOR_COOLER 0
@@ -79,8 +79,8 @@
 #define EXT0_X_OFFSET 0
 #define EXT0_Y_OFFSET 0
 #define EXT0_Z_OFFSET 0
-#define EXT0_STEPS_PER_MM 1
-#define EXT0_TEMPSENSOR_TYPE 0
+#define EXT0_STEPS_PER_MM 128
+#define EXT0_TEMPSENSOR_TYPE 3
 #define EXT0_TEMPSENSOR_PIN TEMP_0_PIN
 #define EXT0_HEATER_PIN HEATER_0_PIN
 #define EXT0_STEP_PIN ORIG_E0_STEP_PIN
@@ -320,8 +320,8 @@ It also can add a delay to wait for spindle to run on full speed.
 #define X_HOME_DIR 1
 #define Y_HOME_DIR 1
 #define Z_HOME_DIR -1
-#define X_MAX_LENGTH 524
-#define Y_MAX_LENGTH 478
+#define X_MAX_LENGTH 460
+#define Y_MAX_LENGTH 460
 #define Z_MAX_LENGTH 180
 #define X_MIN_POS 0
 #define Y_MIN_POS 0
