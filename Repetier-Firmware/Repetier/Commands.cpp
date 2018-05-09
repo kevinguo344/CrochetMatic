@@ -1497,8 +1497,19 @@ void Commands::processLCode(GCode *com){
     switch( com->L ){
         case 0:
             Wire.beginTransmission(42);
-            Wire.write("N 0 0");
-            Wire.endTransmission();
+            if(com->hasT()){
+              int needleIndex = com->T;
+              Com::printF(PSTR("It has nID "));
+              Com::printF("%04f",needleIndex);
+              Com::printF(PSTR("\n"));
+              String transmit = "N ";
+              transmit += needleIndex;
+              transmit += " 0";
+              char a[5];
+              transmit.toCharArray(a, 5);
+              Wire.write(a);
+              Wire.endTransmission();
+            }
             //Commands::initializeDriver();
             break;
         case 1:

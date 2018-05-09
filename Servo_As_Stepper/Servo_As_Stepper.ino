@@ -25,48 +25,15 @@ class Needle {
   public:
   int needle_steps;
   int latch_steps;
-
-  void update_needle_servo_value();
-  void update_latch_servo_value();
-  void update_servos();
-  void safe_update_servos();
+  bool inverted;
   
+  void safe_update_servos();
   void set_as_active();
 
   // To be replaced by I2C data to reach a servo;
   Servo needle_servo;
   Servo latch_servo;
 };
-
-
-void Needle::update_needle_servo_value()
-{
-  needle_steps = needle_stepper_position();
-  //Serial.print("Needle steps: ");
-  //Serial.println(needle_steps);
-  // To be replaced by I2C commands
-  needle_servo.write(((180.0*needle_steps)/MAXIMUM_STEPS)*10);
-}
-
-void Needle::update_latch_servo_value()
-{
-  latch_steps = latch_stepper_position();
-  //Serial.print("Latch steps: ");
-  //Serial.println(latch_steps);
-  // To be replaced by I2C commands
-  // Wire.beginTransmission(... // address of the target board
-  // Wire.write(...
-  // Wire.write(...
-  // Wire.endTransmission();    // Transmit the information...
-
-  latch_servo.write(180 - (180.0*latch_steps)/MAXIMUM_STEPS);
-}
-
-void Needle::update_servos()
-{
-  update_needle_servo_value();
-  update_latch_servo_value();
-}
 
 void Needle::safe_update_servos()
 {
@@ -84,8 +51,16 @@ void Needle::safe_update_servos()
   
   latch_steps = constrain(latch_steps, min_safe_latch_steps, max_safe_latch_steps);
   Serial.print("Latch steps: "); Serial.println(latch_steps/STEP_PER_MM);
-  needle_servo.write(((180.0*needle_steps)/MAXIMUM_STEPS));
-  latch_servo.write(180 - (180.0*latch_steps)/MAXIMUM_STEPS);
+  
+  if(this->inverted){
+    needle_servo.write(((180.0*needle_steps)/MAXIMUM_STEPS));
+    latch_servo.write(180 - ((180.0*latch_steps)/MAXIMUM_STEPS));
+  }
+  else{
+    needle_servo.write(180 - ((180.0*needle_steps)/MAXIMUM_STEPS));
+    latch_servo.write((180.0*latch_steps)/MAXIMUM_STEPS);
+  }
+
 }
 
 void Needle::set_as_active()
@@ -95,15 +70,17 @@ void Needle::set_as_active()
 }
 
 
-const int number_of_needles = 2;
+const int number_of_needles = 5;
 Needle needles[number_of_needles];
-const int servo_pins[2*number_of_needles] = {0, 1, 5, 6};
+
+//0,1,2,10,11 are for needle servos
+//5,6,7,8,9 are for latch servos
+const int servo_pins[2*number_of_needles] = {0, 1, 2, 10, 11, 5, 6, 7, 8, 9};
 
 void switch_active_needle(int old_needle, int new_needle)
 {
   if (old_needle != new_needle)
   {
-    //needles[old_needle].update_servos();
     needles[old_needle].safe_update_servos();
     needles[new_needle].set_as_active();
     current_needle = new_needle;
@@ -118,11 +95,20 @@ void setup()
     // Here we initialize the different paramters for each servo of that needle
     Serial.println(servo_pins[i*2]);
     needles[i].needle_servo.attach(servo_pins[i*2]);
-    needles[i].needle_servo.write(0);
-
+    
     Serial.println(servo_pins[i*2 + 1]);
     needles[i].latch_servo.attach(servo_pins[i*2 + 1]);
-    needles[i].latch_servo.write(0);
+    if(i%2 == 0){
+      needles[i].needle_servo.write(0);
+      needles[i].latch_servo.write(180);
+      needles[i].inverted = false;
+    }
+    else{
+      needles[i].needle_servo.write(180);
+      needles[i].latch_servo.write(0);
+      needles[i].inverted = true;
+    }
+   
   }
   current_needle = 0;
   current_stepper_pos = 0;
@@ -167,26 +153,6 @@ void on_I2C_event(int how_many)
 
 void loop()
 {
-  if (Serial.available() > 0)
-  {
-    switch(Serial.read())
-    {
-      case '0':
-        switch_active_needle(current_needle, 0);
-        current_needle = 0;
-      break;
-      case '1':
-        switch_active_needle(current_needle, 1);
-        current_needle = 1;
-      break;
-      default:
-      break;
-    }
-    Serial.print("Active needle is: ");
-    Serial.print(current_needle);
-  }
-  //needles[current_needle].update_servos();
-  //needles[current_needle].safe_update_servos();
   if(current_stepper_pos != needle_stepper_position() || current_latch_pos != latch_stepper_position()){
     needles[current_needle].safe_update_servos();
     Serial.print("Active needle is: "); Serial.println(current_needle);
