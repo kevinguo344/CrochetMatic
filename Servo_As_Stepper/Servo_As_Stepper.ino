@@ -10,10 +10,12 @@
 #include <Servo.h>
 const int I2C_SLAVE = 42;
 const int STEP_PER_MM = 128;
-const int MAX_RANGE_MM = 65;
+const int MAX_RANGE_MM = 60;
 const int MAXIMUM_STEPS = MAX_RANGE_MM * STEP_PER_MM;
-const int MIN_NEEDLE_LATCH_DELTA_STEP = -10 * STEP_PER_MM;
-const int MAX_NEEDLE_LATCH_DELTA_STEP = 28*STEP_PER_MM;
+//const int MIN_NEEDLE_LATCH_DELTA_STEP = -10 * STEP_PER_MM;
+//const int MAX_NEEDLE_LATCH_DELTA_STEP = 28*STEP_PER_MM;
+const int MIN_NEEDLE_LATCH_DELTA_STEP = 0;
+const int MAX_NEEDLE_LATCH_DELTA_STEP = 30*STEP_PER_MM;
 int current_needle;
 
 int32_t current_stepper_pos;
@@ -70,16 +72,18 @@ void Needle::safe_update_servos()
 {
   latch_steps = latch_stepper_position();
   needle_steps = needle_stepper_position();
+  //provides constrain for needle steps so needle doesn't go beyond maximum range 
+  needle_steps = constrain(needle_steps, 0, MAXIMUM_STEPS);
+  Serial.print("Needle steps: "); Serial.println(needle_steps/STEP_PER_MM);
   int max_safe_latch_steps = needle_steps + MAX_NEEDLE_LATCH_DELTA_STEP;
+  max_safe_latch_steps = constrain(max_safe_latch_steps, 0, MAXIMUM_STEPS);
+  Serial.print("Max latch steps: "); Serial.println(max_safe_latch_steps/STEP_PER_MM);
   int min_safe_latch_steps = needle_steps + MIN_NEEDLE_LATCH_DELTA_STEP;
-  if (latch_steps > max_safe_latch_steps){
-    latch_steps = max_safe_latch_steps;
-  }
-  else{
-    if (latch_steps < min_safe_latch_steps){
-      latch_steps = min_safe_latch_steps;
-    }
-  }
+  min_safe_latch_steps = constrain(min_safe_latch_steps, 0, MAXIMUM_STEPS);
+  Serial.print("Min latch steps: "); Serial.println(min_safe_latch_steps/STEP_PER_MM);
+  
+  latch_steps = constrain(latch_steps, min_safe_latch_steps, max_safe_latch_steps);
+  Serial.print("Latch steps: "); Serial.println(latch_steps/STEP_PER_MM);
   needle_servo.write(((180.0*needle_steps)/MAXIMUM_STEPS));
   latch_servo.write(180 - (180.0*latch_steps)/MAXIMUM_STEPS);
 }
@@ -99,7 +103,8 @@ void switch_active_needle(int old_needle, int new_needle)
 {
   if (old_needle != new_needle)
   {
-    needles[old_needle].update_servos();
+    //needles[old_needle].update_servos();
+    needles[old_needle].safe_update_servos();
     needles[new_needle].set_as_active();
     current_needle = new_needle;
   }
@@ -120,6 +125,8 @@ void setup()
     needles[i].latch_servo.write(0);
   }
   current_needle = 0;
+  current_stepper_pos = 0;
+  current_latch_pos = 180;
   Serial.begin(9600);
   Wire.begin(I2C_SLAVE);
   Wire.onReceive(on_I2C_event);
@@ -178,17 +185,17 @@ void loop()
     Serial.print("Active needle is: ");
     Serial.print(current_needle);
   }
-  needles[current_needle].update_servos();
+  //needles[current_needle].update_servos();
+  //needles[current_needle].safe_update_servos();
   if(current_stepper_pos != needle_stepper_position() || current_latch_pos != latch_stepper_position()){
-    Serial.print("Active needle is: ");
-    Serial.println(current_needle);
-    Serial.print(needle_stepper_position());
-    Serial.print("/");
-    Serial.println(latch_stepper_position());
-    Serial.print("Degrees: ");
-    Serial.println((180.0*needle_stepper_position())/MAXIMUM_STEPS);
-    Serial.print("Current Place: "); Serial.println(needles[current_needle].needle_servo.read());
-    Serial.print("Servo attached: "); Serial.println(needles[current_needle].needle_servo.attached());
+    needles[current_needle].safe_update_servos();
+    Serial.print("Active needle is: "); Serial.println(current_needle);
+    Serial.print(needle_stepper_position());  Serial.print("/");  Serial.println(latch_stepper_position());
+    Serial.print("Needle servo current place: ");  Serial.println(needles[current_needle].needle_servo.read());
+    Serial.print("Servo attached: "); Serial.println((bool)needles[current_needle].needle_servo.attached());
+    Serial.print("Latch servo current place: ");  Serial.println(needles[current_needle].latch_servo.read());
+    Serial.print("Servo attached: "); Serial.println((bool)needles[current_needle].latch_servo.attached());
+    Serial.println("");
     current_stepper_pos = needle_stepper_position();
     current_latch_pos = latch_stepper_position();
   }

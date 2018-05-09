@@ -872,8 +872,13 @@ void Commands::processGCode(GCode *com) {
                     LaserDriver::laserOn = false;
                 }
 #endif // defined
+                
+                Com::printF(PSTR("G1??"));
+                
                 if(com->hasS()) Printer::setNoDestinationCheck(com->S != 0);
+                
                 if(Printer::setDestinationStepsFromGCode(com)) // For X Y Z E F
+                  Com::printF(PSTR("It executed setAngles"));
 #if NONLINEAR_SYSTEM
                     if (!PrintLine::queueNonlinearMove(ALWAYS_CHECK_ENDSTOPS, true, true)) {
                         Com::printWarningFLN(PSTR("executeGCode / queueDeltaMove returns error"));
