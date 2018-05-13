@@ -1494,20 +1494,35 @@ void Commands::processGCode(GCode *com) {
     previousMillisCmd = HAL::timeInMilliseconds();
 }
 void Commands::processLCode(GCode *com){
-    switch( com->L ){
-        case 0:
-            Wire.beginTransmission(42);
+    if( com->L ){
+        Wire.beginTransmission(42);
+        float needleIndex = com->L;
+        int nID = (int) needleIndex - 1;
+        Com::printF(PSTR("It has nID "));
+        Com::printF(nID);
+        Com::printF(PSTR("\n"));
+        String transmit = "N ";
+        transmit.concat(nID);
+        char a[5];
+        transmit.toCharArray(a, 5);
+        Wire.write(a, sizeof(a));
+        Wire.endTransmission();
+        
+        /*case 0:
             if(com->hasT()){
-              int needleIndex = com->T;
+              Wire.beginTransmission(42);
+              float needleIndex = com->T;
+              int nID = (int) needleIndex;
               Com::printF(PSTR("It has nID "));
-              Com::printF("%04f",needleIndex);
+              Com::printF(nID);
               Com::printF(PSTR("\n"));
               String transmit = "N ";
-              transmit += needleIndex;
-              transmit += " 0";
+              transmit.concat(nID);
+              //Com::printF("%s \n", transmit);
               char a[5];
               transmit.toCharArray(a, 5);
-              Wire.write(a);
+              //Com::printF(a);
+              Wire.write(a, sizeof(a));
               Wire.endTransmission();
             }
             //Commands::initializeDriver();
@@ -1565,7 +1580,7 @@ void Commands::processLCode(GCode *com){
                 Commands::setAnglesRelative(topAngle,botAngle);
               }
             }
-            break;
+            break;*/
     }
 }
 
