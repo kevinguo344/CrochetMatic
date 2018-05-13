@@ -161,13 +161,13 @@ void loop()
   if(current_stepper_pos != needle_stepper_position() || current_latch_pos != latch_stepper_position()){
     needles[current_needle].safe_update_servos();
     Serial.print("Active needle is: "); Serial.println(current_needle);
-    Serial.print("Inverted: "); Serial.println(needles[current_needle].inverted);
+    //Serial.print("Inverted: "); Serial.println(needles[current_needle].inverted);
     Serial.print(needle_stepper_position());  Serial.print("/");  Serial.println(latch_stepper_position());
-    Serial.print("Needle servo current place: ");  Serial.println(needles[current_needle].needle_servo.read());
-    Serial.print("Needle Servo attached: "); Serial.println((bool)needles[current_needle].needle_servo.attached());
-    Serial.print("Latch servo current place: ");  Serial.println(needles[current_needle].latch_servo.read());
-    Serial.print("Latch  Servo attached: "); Serial.println((bool)needles[current_needle].latch_servo.attached());
-    Serial.println("");
+    //Serial.print("Needle servo current place: ");  Serial.println(needles[current_needle].needle_servo.read());
+    //Serial.print("Needle Servo attached: "); Serial.println((bool)needles[current_needle].needle_servo.attached());
+    //Serial.print("Latch servo current place: ");  Serial.println(needles[current_needle].latch_servo.read());
+    //Serial.print("Latch  Servo attached: "); Serial.println((bool)needles[current_needle].latch_servo.attached());
+    //Serial.println("");
     current_stepper_pos = needle_stepper_position();
     current_latch_pos = latch_stepper_position();
   }

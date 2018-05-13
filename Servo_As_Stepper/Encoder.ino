@@ -106,11 +106,16 @@ int32_t needle_stepper_position()
 
 void set_needle_stepper_position(long int base_value)
 {
+  Serial.println("set_needle_stepper_position");
   FTM1_SC &= ~FTM_SC_CLKS_3;
+  Serial.print("FTM1_SC &= ~FTM_SC_CLKS_3: "); Serial.println(FTM1_SC);
   needle_stepper_base_value = base_value;
   FTM1_CNT = 0;
+  Serial.print("FTM1_CNT: "); Serial.println(FTM1_CNT);
   FTM1_SC &= ~FTM_SC_TOF;
+  Serial.print("FTM1_SC &= ~FTM_SC_TOF: "); Serial.println(FTM1_SC);
   FTM1_SC |= FTM_SC_CLKS_3;
+  Serial.print("FTM1_SC |= FTM_SC_CLKS_3: "); Serial.println(FTM1_SC);
 }
  
 void start_tracking_needle_stepper()
@@ -150,10 +155,15 @@ int32_t latch_stepper_position()
 
 void set_latch_stepper_position(long int base_value)
 {
+  Serial.println("set_latch_stepper_position");s
   FTM2_SC &= ~FTM_SC_CLKS_3;
+  Serial.print("FTM2_SC: "); Serial.println(FTM2_SC);
   latch_stepper_base_value = base_value - FTM2_CNT;
+  Serial.print("latch_stepper_base_value = base_value - FTM2_CNT: "); Serial.println(latch_stepper_base_value);
   FTM2_SC &= ~FTM_SC_TOF;
+  Serial.print("FTM2_SC &= ~FTM_SC_TOF: "); Serial.println(FTM2_SC);
   FTM2_SC |= FTM_SC_CLKS_3;
+  Serial.print("FTM2_SC |= FTM_SC_CLKS_3: "); Serial.println(FTM2_SC);
 }
 
 void start_tracking_latch_stepper()
