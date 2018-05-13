@@ -18,6 +18,9 @@ const int MIN_NEEDLE_LATCH_DELTA_STEP = 0;
 const int MAX_NEEDLE_LATCH_DELTA_STEP = 30*STEP_PER_MM;
 int current_needle;
 
+int prev_needle_value;
+int prev_latch_value;
+
 int32_t current_stepper_pos;
 int32_t current_latch_pos;
 
