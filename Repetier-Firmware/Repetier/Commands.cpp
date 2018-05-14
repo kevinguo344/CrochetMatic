@@ -23,11 +23,12 @@ which based on Tonokip RepRap firmware rewrite based off of Hydra-mmm firmware.
 #include <Wire.h>
 #include <Adafruit_PWMServoDriver.h>
 
-Adafruit_PWMServoDriver myservoDriver = Adafruit_PWMServoDriver();
-
 const int8_t sensitive_pins[] PROGMEM = SENSITIVE_PINS; // Sensitive pin list for M42
 int Commands::lowestRAMValue = MAX_RAM;
 int Commands::lowestRAMValueSend = MAX_RAM;
+
+float cZ = 0;
+float cE = 0;
 
 void Commands::commandLoop() {
     while(true) {
@@ -879,6 +880,15 @@ void Commands::processGCode(GCode *com) {
                 
                 if(Printer::setDestinationStepsFromGCode(com)) // For X Y Z E F
                   Com::printF(PSTR("It executed setAngles"));
+                  //SEND OVER I2C TO TEENSY THE 
+                  if(com->hasZ()){
+                    float zVal = Printer::convertToMM(com->Z) - Printer::coordinateOffset[Z_AXIS];
+                    cZ = zVal;
+                  }
+                  if(com->hasE()){
+                    float eVal = Printer::convertToMM(com->E);
+                    cE = eVal;
+                  }
 #if NONLINEAR_SYSTEM
                     if (!PrintLine::queueNonlinearMove(ALWAYS_CHECK_ENDSTOPS, true, true)) {
                         Com::printWarningFLN(PSTR("executeGCode / queueDeltaMove returns error"));
@@ -1498,89 +1508,50 @@ void Commands::processLCode(GCode *com){
         Wire.beginTransmission(42);
         float needleIndex = com->L;
         int nID = (int) needleIndex - 1;
+        String transmit = "N";
+        transmit.concat(nID);
+        transmit.concat(" Z");
+        transmit.concat(cZ);
+        transmit.concat(" E");
+        transmit.concat(cE);
+        char send[16];
+        transmit.toCharArray(send, 16);
+        Wire.write(send, sizeof(send));
+        Wire.endTransmission();
+        
+        /*int nID = (int) needleIndex - 1;
+        //send new N
         Com::printF(PSTR("It has nID "));
         Com::printF(nID);
         Com::printF(PSTR("\n"));
-        String transmit = "N ";
-        transmit.concat(nID);
+        String transmitN = "N";
+        transmitN.concat(nID);
         char a[5];
-        transmit.toCharArray(a, 5);
+        transmitN.toCharArray(a, 5);
         Wire.write(a, sizeof(a));
         Wire.endTransmission();
+
+        Wire.beginTransmission(42);
+        String transmitZ = "Z ";
+        transmitZ.concat(cZ);
+        char b[10];
+        transmitZ.toCharArray(b, 10);
+        Com::printF(PSTR("current Z: "));
+        Com::printF("%.2f", cZ);
+        Com::printF(PSTR("\n"));
+        Wire.write(b, sizeof(b));
+        Wire.endTransmission();
         
-        /*case 0:
-            if(com->hasT()){
-              Wire.beginTransmission(42);
-              float needleIndex = com->T;
-              int nID = (int) needleIndex;
-              Com::printF(PSTR("It has nID "));
-              Com::printF(nID);
-              Com::printF(PSTR("\n"));
-              String transmit = "N ";
-              transmit.concat(nID);
-              //Com::printF("%s \n", transmit);
-              char a[5];
-              transmit.toCharArray(a, 5);
-              //Com::printF(a);
-              Wire.write(a, sizeof(a));
-              Wire.endTransmission();
-            }
-            //Commands::initializeDriver();
-            break;
-        case 1:
-            Commands::needleSequence();
-            break;
-        case 2:
-            Commands::rest();
-            break;
-        case 3:
-            Commands::pullDown();
-            break;
-        case 4:
-            Commands::closeUp();
-            break;
-        case 5:
-            Commands::extendUpOpened();
-            break;
-        case 6:
-            Commands::extendUpClosed();
-            break;
-        case 7:
-            Commands::descendDown();
-            break;
-        case 8:
-            Commands::ascendUp();
-            break;
-        case 9:
-          if(com->hasT()){
-              float topAngle = com->T;
-              Com::printF(PSTR("It has T "));
-              Com::printF("%04f",topAngle);
-              Com::printF(PSTR("\n"));
-              if(com->hasB()){
-                float botAngle = com->B;
-                Com::printF(PSTR("It has B "));
-                Com::printF("%04f",botAngle);
-                Com::printF(PSTR("\n"));
-                Commands::setAngles(topAngle,botAngle);
-              }
-            }
-            break;
-        case 10:
-          if(com->hasT()){
-              float topAngle = com->T;
-              Com::printF(PSTR("It has T "));
-              Com::printF("%04f",topAngle);
-              Com::printF(PSTR("\n"));
-              if(com->hasB()){
-                float botAngle = com->B;
-                Com::printF(PSTR("It has B "));
-                Com::printF("%04f",botAngle);
-                Com::printF(PSTR("\n"));
-                Commands::setAnglesRelative(topAngle,botAngle);
-              }
-            }
-            break;*/
+        Wire.beginTransmission(42);
+        String transmitE = "E ";
+        transmitE.concat(cE);
+        char c[10];
+        transmitE.toCharArray(c, 10);
+        Com::printF(PSTR("current E: "));
+        Com::printF("%.2f", cE);
+        Com::printF(PSTR("\n"));
+        Wire.write(c, sizeof(c));
+        Wire.endTransmission();*/
     }
 }
 
@@ -1792,21 +1763,6 @@ void Commands::processMCode(GCode *com) {
                     Printer::enableZStepper();
             }
             break;
-        case 100:
-          Commands::needleSequence();
-        case 101:
-          Commands::initializeDriver();
-          break;
-        case 102:
-          Commands::rest();
-          break;
-        case 103:
-          Commands::closeUp();
-          break;
-        case 199:
-          Commands: pullDown();
-          break;
-
         case 104: // M104 temperature
 #if NUM_EXTRUDER > 0
             if(reportTempsensorError()) break;
@@ -2579,102 +2535,4 @@ void Commands::writeLowestFreeRAM() {
     }
 }
 
-//needle commands
-void Commands::initializeDriver(){
-  //Wire.write("N 0 0");
-  myservoDriver.begin();
-  myservoDriver.setPWMFreq(60);
-}
-
-void Commands::pullDown(){
-  Com::printF(PSTR("Needles pulling down"));
-  myservoDriver.setPWM(topServo, 0, convertAngle(150));
-  myservoDriver.setPWM(botServo, 0, convertAngle(60));
-}
-
-void Commands::rest(){
-  Com::printF(PSTR("Needles resting"));
-  myservoDriver.setPWM(topServo, 0, convertAngle(0));
-  myservoDriver.setPWM(botServo, 0, convertAngle(180));
-}
-
-void Commands::closeUp(){
-  Com::printF(PSTR("Needles closing"));
-  myservoDriver.setPWM(topServo, 0, convertAngle(0));
-  myservoDriver.setPWM(botServo, 0, convertAngle(65));
-}
-
-void Commands::needleSequence(){
-  Commands::rest(); delay(1000);
-  Commands::pullDown(); delay(1000);
-  Commands::closeUp(); delay(1000);
-  Commands::rest();
-}
-
-void Commands::extendUpOpened(){
-  Com::printF(PSTR("Needles extended up opened"));
-  myservoDriver.setPWM(topServo, 0, convertAngle(180));
-  myservoDriver.setPWM(botServo, 0, convertAngle(0));
-}
-
-void Commands::extendUpClosed(){
-  Com::printF(PSTR("Needles closed"));
-  myservoDriver.setPWM(topServo, 0, convertAngle(60));
-  myservoDriver.setPWM(botServo, 0, convertAngle(0));
-}
-
-void Commands::setAngles(float t, float b){
-  if(abs(t - b) <= 155 && (t >= 0 && t <= 180) && (b >= 0 && b <= 180)){
-    Com::printF(PSTR("It executed setAngles"));
-    myservoDriver.setPWM(topServo, 0, convertAngle(t));
-    myservoDriver.setPWM(botServo, 0, convertAngle(180-b));
-  }
-}
-
-void Commands::setAnglesRelative(float t, float b){
-  t = constrain(t, 0.0, 180.0);
-  b = constrain(b, 0.0, 1.0);
-  float bAngle = map(b, 0.0, 1.0, 0, 120);
-  bAngle += t;
-  bAngle = constrain(bAngle, 0, 180.0);
-  myservoDriver.setPWM(topServo, 0, convertAngle(t));
-  myservoDriver.setPWM(botServo, 0, convertAngle(180-bAngle));
-}
-
-void Commands::descendDown(){
-  //top: 60 -> 0
-  //bottom: 180 -> 0
-  for(int i = 60; i >= 0; i--){
-    myservoDriver.setPWM(topServo, 0, convertAngle(i));
-    myservoDriver.setPWM(botServo, 0, convertAngle(180-(3*i)));
-    delay(10);
-  }
-}
-
-void Commands::ascendUp(){
-  //top: 0 -> 180
-  //bottom: 0 -> 180
-  for(int i = 0; i <= 180; i++){
-    myservoDriver.setPWM(topServo, 0, convertAngle(i));
-    myservoDriver.setPWM(botServo, 0, convertAngle(180-i));
-    delay(10);
-  }
-}
-
-//numeric commands
-long Commands::convertAngle(int a){
-  return map(a, 0, 180, SERVOMIN, SERVOMAX);
-}
-
-float Commands::contsrain(float x, float a, float b){
-  if(x >= a && x <= b){
-    return x;
-  }
-  else if(x < a){
-    return a;
-  }
-  else{
-    return b;
-  }
-}
 

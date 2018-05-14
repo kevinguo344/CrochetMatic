@@ -29,6 +29,9 @@
 const int topServo = 0;
 const int botServo = 1;
 
+extern float cZ;
+extern float cE;
+
 class Commands
 {
 public:

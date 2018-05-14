@@ -18,8 +18,8 @@ const int MIN_NEEDLE_LATCH_DELTA_STEP = 0;
 const int MAX_NEEDLE_LATCH_DELTA_STEP = 30*STEP_PER_MM;
 int current_needle;
 
-int prev_needle_value;
-int prev_latch_value;
+int prev_needle_value = 0;
+int prev_latch_value = 0;
 
 int32_t current_stepper_pos;
 int32_t current_latch_pos;
@@ -28,10 +28,13 @@ class Needle {
   public:
   int needle_steps;
   int latch_steps;
+  float needle_pos;
+  float latch_pos;
   bool inverted;
   
   void safe_update_servos();
   void set_as_active();
+  void safe_update_needle(float transmitZ, float transmitE);
 
   // To be replaced by I2C data to reach a servo;
   Servo needle_servo;
@@ -39,21 +42,21 @@ class Needle {
 };
 
 void Needle::safe_update_servos()
-{
+{ 
   latch_steps = latch_stepper_position();
   needle_steps = needle_stepper_position();
-  //provides constrain for needle steps so needle doesn't go beyond maximum range 
+  
+  //provides constrain for needle steps so needle doesn't go beyond maximum range
   needle_steps = constrain(needle_steps, 0, MAXIMUM_STEPS);
-  Serial.print("Needle steps: "); Serial.println(needle_steps/STEP_PER_MM);
+  
+  //Serial.print("Needle steps: "); Serial.println(needle_steps/STEP_PER_MM);
   int max_safe_latch_steps = needle_steps + MAX_NEEDLE_LATCH_DELTA_STEP;
   max_safe_latch_steps = constrain(max_safe_latch_steps, 0, MAXIMUM_STEPS);
-  Serial.print("Max latch steps: "); Serial.println(max_safe_latch_steps/STEP_PER_MM);
   int min_safe_latch_steps = needle_steps + MIN_NEEDLE_LATCH_DELTA_STEP;
   min_safe_latch_steps = constrain(min_safe_latch_steps, 0, MAXIMUM_STEPS);
-  Serial.print("Min latch steps: "); Serial.println(min_safe_latch_steps/STEP_PER_MM);
   
   latch_steps = constrain(latch_steps, min_safe_latch_steps, max_safe_latch_steps);
-  Serial.print("Latch steps: "); Serial.println(latch_steps/STEP_PER_MM);
+  //Serial.print("Latch steps: "); Serial.println(latch_steps/STEP_PER_MM);
   
   if(this->inverted){
     needle_servo.write(180 - ((180.0*needle_steps)/MAXIMUM_STEPS));
@@ -63,7 +66,27 @@ void Needle::safe_update_servos()
     needle_servo.write(((180.0*needle_steps)/MAXIMUM_STEPS));
     latch_servo.write(180 - ((180.0*latch_steps)/MAXIMUM_STEPS));
   }
+}
 
+void Needle::safe_update_needle(float transmitZ, float transmitE){
+  needle_pos = transmitZ;
+  latch_pos = transmitE;
+  needle_steps = transmitZ * STEP_PER_MM;
+  needle_steps = constrain(needle_steps, 0, MAXIMUM_STEPS);
+  int max_safe_latch_steps = needle_steps + MAX_NEEDLE_LATCH_DELTA_STEP;
+  max_safe_latch_steps = constrain(max_safe_latch_steps, 0, MAXIMUM_STEPS);
+  int min_safe_latch_steps = needle_steps + MIN_NEEDLE_LATCH_DELTA_STEP;
+  min_safe_latch_steps = constrain(min_safe_latch_steps, 0, MAXIMUM_STEPS);
+  latch_steps = transmitE * STEP_PER_MM;
+  latch_steps = constrain(latch_steps, min_safe_latch_steps, max_safe_latch_steps);
+  if(this->inverted){
+    needle_servo.write(180 - ((180.0*needle_steps)/MAXIMUM_STEPS));
+    latch_servo.write((180.0*latch_steps)/MAXIMUM_STEPS);
+  }
+  else{
+    needle_servo.write(((180.0*needle_steps)/MAXIMUM_STEPS));
+    latch_servo.write(180 - ((180.0*latch_steps)/MAXIMUM_STEPS));
+  }
 }
 
 void Needle::set_as_active()
@@ -73,15 +96,13 @@ void Needle::set_as_active()
 }
 
 
-const int number_of_needles = 5;
+const int number_of_needles = 3;
 Needle needles[number_of_needles];
 
 //needle 0 {main: 0, latch: 1}
 //needle 1 {main: 2, latch: 5}
 //needle 2 {main: 6, latch: 7}
-//needle 3 {main: 8, latch: 9}
-//needle 4 {main: 10, latch: 11}
-const int servo_pins[2*number_of_needles] = {0, 1, 2, 5, 6, 7, 8, 9, 10, 11};
+const int servo_pins[2*number_of_needles] = {0, 1, 2, 5, 6, 7};
 
 void switch_active_needle(int old_needle, int new_needle)
 {
@@ -132,21 +153,41 @@ void on_I2C_event(int how_many)
 {
   if (how_many >= 4)
   {
-    char command[5];
-    for (int k = 0; k < 4; k++)
+    //N1 Z60.00 E60.00
+    //['N','1',' ','Z','6','0','.','0','0',' ','E','6','0','.','0','0']
+    //data array will be 16 long
+    char command[16];
+    for (int k = 0; k < 16; k++)
     {
       command[k] = Wire.read();
     }
-    command[4] = 0;
     Serial.print("Recieved: ");
     Serial.print(command);
-    Serial.print(" ");
+    Serial.println(" ");
     if (command[0] == 'N')
     {
       String to_parse = (command + 1);
       long new_needle = to_parse.toInt();
       switch_active_needle(current_needle, new_needle);
       Serial.print("Active needle is: "); Serial.println(current_needle);
+    }
+    if(command[0] == 'Z'){
+      String to_parse = (command + 1);
+      float desired_needle_pos = to_parse.toFloat();
+      Serial.print("Desired Z is: "); Serial.println(desired_needle_pos);
+      if(desired_needle_pos != needles[current_needle].needle_pos){
+        Serial.println("Updating");
+        needles[current_needle].safe_update_needle(desired_needle_pos, needles[current_needle].latch_pos);
+      }
+    }
+    if(command[0] == 'E'){
+      String to_parse = (command + 1);
+      float desired_latch_pos = to_parse.toFloat();
+      Serial.print("Desired E is: "); Serial.println(desired_latch_pos);
+      if(desired_needle_pos != needles[current_needle].latch_pos){
+        Serial.println("Updating");
+        needles[current_needle].safe_update_needle(needles[current_needle].needle_pos, desired_latch_pos);
+      }
     }
     else
     {
@@ -161,16 +202,13 @@ void on_I2C_event(int how_many)
 
 void loop()
 {
+  
   if(current_stepper_pos != needle_stepper_position() || current_latch_pos != latch_stepper_position()){
     needles[current_needle].safe_update_servos();
     Serial.print("Active needle is: "); Serial.println(current_needle);
     //Serial.print("Inverted: "); Serial.println(needles[current_needle].inverted);
-    Serial.print(needle_stepper_position());  Serial.print("/");  Serial.println(latch_stepper_position());
-    //Serial.print("Needle servo current place: ");  Serial.println(needles[current_needle].needle_servo.read());
-    //Serial.print("Needle Servo attached: "); Serial.println((bool)needles[current_needle].needle_servo.attached());
-    //Serial.print("Latch servo current place: ");  Serial.println(needles[current_needle].latch_servo.read());
-    //Serial.print("Latch  Servo attached: "); Serial.println((bool)needles[current_needle].latch_servo.attached());
-    //Serial.println("");
+    //Serial.print(needle_stepper_position());  Serial.print("/");  Serial.println(latch_stepper_position());
+    //Serial.print(needles[current_needle].needle_servo.read()); Serial.print(" deg / "); Serial.print(needles[current_needle].latch_servo.read()); Serial.println(" deg");
     current_stepper_pos = needle_stepper_position();
     current_latch_pos = latch_stepper_position();
   }
