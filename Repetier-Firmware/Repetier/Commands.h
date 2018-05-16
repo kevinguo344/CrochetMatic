@@ -31,7 +31,7 @@ const int botServo = 1;
 
 extern float cZ;
 extern float cE;
-
+extern int cN;
 class Commands
 {
 public:

@@ -29,7 +29,7 @@ int Commands::lowestRAMValueSend = MAX_RAM;
 
 float cZ = 0;
 float cE = 0;
-
+int cN = 0;
 void Commands::commandLoop() {
     while(true) {
 #ifdef DEBUG_PRINT
@@ -1505,19 +1505,23 @@ void Commands::processGCode(GCode *com) {
 }
 void Commands::processLCode(GCode *com){
     if( com->L ){
-        Wire.beginTransmission(42);
         float needleIndex = com->L;
         int nID = (int) needleIndex - 1;
-        String transmit = "N";
-        transmit.concat(nID);
-        transmit.concat(" Z");
-        transmit.concat(cZ);
-        transmit.concat(" E");
-        transmit.concat(cE);
-        char send[16];
-        transmit.toCharArray(send, 16);
-        Wire.write(send, sizeof(send));
-        Wire.endTransmission();
+        if(cN != nID){
+          Wire.beginTransmission(42);
+          String transmit = "N ";
+          transmit.concat(nID);
+          transmit.concat(",");
+          transmit.concat(cZ);
+          transmit.concat(",");
+          transmit.concat(cE);
+          char send[16];
+          transmit.toCharArray(send, 16);
+          Wire.write(send, sizeof(send));
+          Wire.endTransmission();
+          cN = nID;
+        }
+        
         
         /*int nID = (int) needleIndex - 1;
         //send new N
