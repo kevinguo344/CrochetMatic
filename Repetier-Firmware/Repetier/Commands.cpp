@@ -23,12 +23,13 @@ which based on Tonokip RepRap firmware rewrite based off of Hydra-mmm firmware.
 #include <Wire.h>
 #include <Adafruit_PWMServoDriver.h>
 
-Adafruit_PWMServoDriver myservoDriver = Adafruit_PWMServoDriver();
-
 const int8_t sensitive_pins[] PROGMEM = SENSITIVE_PINS; // Sensitive pin list for M42
 int Commands::lowestRAMValue = MAX_RAM;
 int Commands::lowestRAMValueSend = MAX_RAM;
 
+float cZ = 0;
+float cE = 0;
+int cN = 0;
 void Commands::commandLoop() {
     while(true) {
 #ifdef DEBUG_PRINT
@@ -872,8 +873,22 @@ void Commands::processGCode(GCode *com) {
                     LaserDriver::laserOn = false;
                 }
 #endif // defined
+                
+                Com::printF(PSTR("G1??"));
+                
                 if(com->hasS()) Printer::setNoDestinationCheck(com->S != 0);
+                
                 if(Printer::setDestinationStepsFromGCode(com)) // For X Y Z E F
+                  Com::printF(PSTR("It executed setAngles"));
+                  //SEND OVER I2C TO TEENSY THE 
+                  if(com->hasZ()){
+                    float zVal = Printer::convertToMM(com->Z) - Printer::coordinateOffset[Z_AXIS];
+                    cZ = zVal;
+                  }
+                  if(com->hasE()){
+                    float eVal = Printer::convertToMM(com->E);
+                    cE = eVal;
+                  }
 #if NONLINEAR_SYSTEM
                     if (!PrintLine::queueNonlinearMove(ALWAYS_CHECK_ENDSTOPS, true, true)) {
                         Com::printWarningFLN(PSTR("executeGCode / queueDeltaMove returns error"));
@@ -1488,6 +1503,62 @@ void Commands::processGCode(GCode *com) {
     }
     previousMillisCmd = HAL::timeInMilliseconds();
 }
+void Commands::processLCode(GCode *com){
+    if( com->L ){
+        float needleIndex = com->L;
+        int nID = (int) needleIndex - 1;
+        if(cN != nID){
+          Wire.beginTransmission(42);
+          String transmit = "N ";
+          transmit.concat(nID);
+          transmit.concat(",");
+          transmit.concat(cZ);
+          transmit.concat(",");
+          transmit.concat(cE);
+          char send[16];
+          transmit.toCharArray(send, 16);
+          Wire.write(send, sizeof(send));
+          Wire.endTransmission();
+          cN = nID;
+        }
+        
+        
+        /*int nID = (int) needleIndex - 1;
+        //send new N
+        Com::printF(PSTR("It has nID "));
+        Com::printF(nID);
+        Com::printF(PSTR("\n"));
+        String transmitN = "N";
+        transmitN.concat(nID);
+        char a[5];
+        transmitN.toCharArray(a, 5);
+        Wire.write(a, sizeof(a));
+        Wire.endTransmission();
+
+        Wire.beginTransmission(42);
+        String transmitZ = "Z ";
+        transmitZ.concat(cZ);
+        char b[10];
+        transmitZ.toCharArray(b, 10);
+        Com::printF(PSTR("current Z: "));
+        Com::printF("%.2f", cZ);
+        Com::printF(PSTR("\n"));
+        Wire.write(b, sizeof(b));
+        Wire.endTransmission();
+        
+        Wire.beginTransmission(42);
+        String transmitE = "E ";
+        transmitE.concat(cE);
+        char c[10];
+        transmitE.toCharArray(c, 10);
+        Com::printF(PSTR("current E: "));
+        Com::printF("%.2f", cE);
+        Com::printF(PSTR("\n"));
+        Wire.write(c, sizeof(c));
+        Wire.endTransmission();*/
+    }
+}
+
 /**
 \brief Execute the G command stored in com.
 */
@@ -1696,21 +1767,6 @@ void Commands::processMCode(GCode *com) {
                     Printer::enableZStepper();
             }
             break;
-        case 100:
-          Commands::needleSequence();
-        case 101:
-          Commands::initializeDriver();
-          break;
-        case 102:
-          Commands::rest();
-          break;
-        case 103:
-          Commands::closeUp();
-          break;
-        case 199:
-          Commands: pullDown();
-          break;
-
         case 104: // M104 temperature
 #if NUM_EXTRUDER > 0
             if(reportTempsensorError()) break;
@@ -2407,6 +2463,7 @@ void Commands::executeGCode(GCode *com) {
     }
     if(com->hasG()) processGCode(com);
     else if(com->hasM()) processMCode(com);
+    else if(com->hasL()) processLCode(com);
     else if(com->hasT()) {    // Process T code
         //com->printCommand(); // for testing if this the source of extruder switches
         Commands::waitUntilEndOfAllMoves();
@@ -2426,6 +2483,8 @@ void Commands::executeGCode(GCode *com) {
 #endif
 
 }
+
+
 
 void Commands::emergencyStop() {
 #if defined(KILL_METHOD) && KILL_METHOD == 1
@@ -2480,37 +2539,4 @@ void Commands::writeLowestFreeRAM() {
     }
 }
 
-
-long Commands::convertAngle(int a){
-  return map(a, 0, 180, SERVOMIN, SERVOMAX);
-}
-
-void Commands::initializeDriver(){
-  myservoDriver.begin();
-  myservoDriver.setPWMFreq(60);
-}
-
-void Commands::pullDown(){
-  Com::printF(PSTR("Needles pulling down"));
-  myservoDriver.setPWM(topServo, 0, convertAngle(150));
-  myservoDriver.setPWM(botServo, 0, convertAngle(60));
-}
-
-void Commands::rest(){
-  Com::printF(PSTR("Needles resting"));
-  myservoDriver.setPWM(topServo, 0, convertAngle(0));
-  myservoDriver.setPWM(botServo, 0, convertAngle(180));
-}
-
-void Commands::closeUp(){
-  Com::printF(PSTR("Needles closing"));
-  myservoDriver.setPWM(topServo, 0, convertAngle(0));
-  myservoDriver.setPWM(botServo, 0, convertAngle(65));
-}
-
-void Commands::needleSequence(){
-  Commands::rest(); delay(1000);
-  Commands::pullDown(); delay(1000);
-  Commands::closeUp(); delay(1000);
-}
 

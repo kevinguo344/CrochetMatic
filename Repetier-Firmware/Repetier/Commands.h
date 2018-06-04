@@ -29,6 +29,9 @@
 const int topServo = 0;
 const int botServo = 1;
 
+extern float cZ;
+extern float cE;
+extern int cN;
 class Commands
 {
 public:
@@ -37,6 +40,7 @@ public:
     static void processArc(GCode *com);
     static void processGCode(GCode *com);
     static void processMCode(GCode *com);
+    static void processLCode(GCode *com);
     static void executeGCode(GCode *com);
     static void waitUntilEndOfAllMoves();
     static void waitUntilEndOfAllBuffers();
@@ -55,7 +59,14 @@ public:
     static void pullDown();
     static void closeUp();
     static void rest();
+    static void descendDown();
+    static void ascendUp();
     static long convertAngle(int a);
+    static float contsrain(float x, float a, float b);
+    static void extendUpOpened();
+    static void extendUpClosed();
+    static void setAngles(float t, float b);
+    static void setAnglesRelative(float t, float b);
 private:
     static int lowestRAMValue;
     static int lowestRAMValueSend;

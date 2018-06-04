@@ -22,7 +22,7 @@
 
 */
 /**
-\mainpage Repetier-Firmware for Arduino based RepRaps
+\mainpage Repetier-Firmware for Arduino based RepRapsji
 <CENTER>Copyright &copy; 2011-2013 by repetier
 </CENTER>
 
@@ -150,7 +150,7 @@ Custom M Codes
 
 #include "Repetier.h"
 #include <SPI.h>
-
+#include <Wire.h>
 
 #if UI_DISPLAY_TYPE == DISPLAY_ARDUINO_LIB
 //#include <LiquidCrystal.h> // Uncomment this if you are using liquid crystal library
@@ -165,15 +165,13 @@ const int botServo = 1;
 */
 void setup()
 {
-    //driver.begin();
-    //driver.setPWMFreq(60);
-    //yield();
-    //rest();
+    
     Printer::setup();
 }
 
 void loop()
 {
+    Wire.write("N 0 0");
     Commands::commandLoop();
 }
 
