@@ -32,9 +32,6 @@ void encoder_setup();
 int32_t needle_stepper_position();
 int32_t latch_stepper_position();
 
-//void set_needle_stepper_position(long int base_value = 0);
-//void set_latch_stepper_position(long int base_value = 0);
-
 void set_needle_stepper_position(long int base_value);
 void set_latch_stepper_position(long int base_value);
 
